@@ -1,0 +1,42 @@
+{
+  "name": "powerpost",
+  "tagline": "Generate captions, create images, and publish to all major platforms",
+  "description": "PowerPost generates social media content and publishes it. Give it a topic, an image, or a video — it researches context across multiple AI models, writes platform-specific captions in your brand voice, generates matching images, and publishes to Instagram, TikTok, X, YouTube, Facebook, LinkedIn, and more as they're added.\n\nFeatures:\n- Content generation from text, images, or video input\n- Deep research mode for higher-quality, research-backed content\n- Image generation with multiple models (FLUX.2 Flex, Ideogram 3.0, GPT Image 1.5, Nano Banana 2)\n- Custom writing styles to match your brand voice\n- Draft-first workflow with approval before publishing\n- read_draft API keys for safe automation (generate but can't publish)\n- Workspace isolation for multi-brand management\n- Webhook notifications for async workflows\n- Credit-based pricing",
+  "category": "social-media",
+  "tags": [
+    "social-media",
+    "content-generation",
+    "ai-writing",
+    "image-generation",
+    "publishing",
+    "instagram",
+    "tiktok",
+    "youtube",
+    "linkedin",
+    "facebook",
+    "x",
+    "multi-platform"
+  ],
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "PowerPost",
+    "url": "https://powerpost.ai"
+  },
+  "support": "https://powerpost.ai/support",
+  "homepage": "https://powerpost.ai",
+  "repository": "https://github.com/tarekhoury/openclaw-powerpost",
+  "pricing": "free",
+  "permissions": {
+    "network": {
+      "domains": ["powerpost.ai"],
+      "justification": "All API calls go to powerpost.ai REST API for content generation, image generation, and social media publishing"
+    },
+    "env": {
+      "POWERPOST_API_KEY": "API key for authenticating with the PowerPost API. Get one at https://powerpost.ai/settings/api",
+      "POWERPOST_WORKSPACE_ID": "Workspace ID for scoping content. Find it at https://powerpost.ai/settings/workspaces"
+    }
+  },
+  "screenshots": [],
+  "demo_video": ""
+}
