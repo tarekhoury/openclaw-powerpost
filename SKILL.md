@@ -1,7 +1,7 @@
 ---
 name: powerpost
 description: Generate social media content and publish to all major platforms from one command.
-version: 1.0.0
+version: 0.1.1
 metadata:
   openclaw:
     requires:
@@ -17,20 +17,44 @@ metadata:
 
 # PowerPost Skill
 
-PowerPost generates social media captions, creates images, and publishes to multiple platforms (Instagram, TikTok, X/Twitter, YouTube, Facebook, LinkedIn) through a single API.
+PowerPost writes social media captions, generates images, and publishes to Instagram, TikTok, X/Twitter, YouTube, Facebook, and LinkedIn through a single API.
 
 ## Setup
 
-The user needs two environment variables:
+The user needs two credentials:
 
-- `POWERPOST_API_KEY` — Their API key (format: `pp_live_sk_{random}`). Created in the PowerPost dashboard at Settings > API.
-- `POWERPOST_WORKSPACE_ID` — The workspace ID to scope all content operations. Found in Settings > Workspaces.
+- `POWERPOST_API_KEY` — their API key (starts with `pp_live_sk_`). They can create one at https://powerpost.ai/settings/api
+- `POWERPOST_WORKSPACE_ID` — their workspace ID. Found at https://powerpost.ai/settings/workspaces
+
+There are two ways to configure these in OpenClaw. The API key can go in the Skills UI (the "API key" field) or via config. The workspace ID has to be set via config since the UI only has one field per skill:
+
+```bash
+openclaw config set skills.entries.powerpost.apiKey "pp_live_sk_YOUR_KEY"
+openclaw config set skills.entries.powerpost.env.POWERPOST_WORKSPACE_ID "YOUR_WORKSPACE_ID"
+```
 
 API keys come in two types:
-- **Full Access** (`read_write`) — All endpoints including publishing.
-- **Draft Only** (`read_draft`) — All endpoints except `POST /posts/{id}/publish` (returns 403).
+- `read_write` — full access, including publishing.
+- `read_draft` — can generate content and create drafts, but publishing is blocked (returns 403). Good when a human should review before anything goes live.
 
-Credits are required for content generation and publishing. New accounts receive 50 free credits on signup.
+New accounts start with 50 free credits. Pricing details at https://powerpost.ai/pricing
+
+## First run
+
+Before running any PowerPost command, make sure both credentials are set. If either is missing, walk the user through setup:
+
+1. If `POWERPOST_API_KEY` is not set:
+   - Ask if they have a PowerPost account. If not, they can sign up at https://powerpost.ai/login
+   - Point them to https://powerpost.ai/settings/api to create an API key.
+   - They can paste it into the "API key" field on the Skills page in the OpenClaw UI, or run: `openclaw config set skills.entries.powerpost.apiKey "pp_live_sk_..."`
+
+2. If `POWERPOST_WORKSPACE_ID` is not set:
+   - Point them to https://powerpost.ai/settings/workspaces to find it.
+   - They need to run: `openclaw config set skills.entries.powerpost.env.POWERPOST_WORKSPACE_ID "their-workspace-id"` — there's no UI field for this one, it has to be set via config.
+
+3. Once both are set, verify by calling `GET /account/credits`. If it returns a balance, you're good. If it returns 401, the API key is wrong.
+
+Don't run any other PowerPost commands until both credentials are confirmed working.
 
 ## Base URL
 
@@ -506,7 +530,7 @@ curl -X POST https://powerpost.ai/api/v1/posts/POST_ID/publish \
 ```
 
 **Prerequisites:**
-- The user's social platforms must be connected in Settings > Connections.
+- The user's social platforms must be connected at https://powerpost.ai/settings/connections
 - The post must be in `draft` status.
 - The user must have sufficient credits.
 - The API key must be `read_write` type (not `read_draft`).
@@ -630,7 +654,7 @@ Handle these errors:
 | 409         | `ALREADY_PUBLISHED`      | This post was already published.                                       |
 | 413         | `FILE_TOO_LARGE`         | The file exceeds the size limit (10 MB for images, 500 MB for video).  |
 | 413         | `STORAGE_QUOTA_EXCEEDED` | Storage quota exceeded (10 GB limit). Delete unused media or contact support. |
-| 422         | `PLATFORM_NOT_CONNECTED` | The target platform is not connected. Direct user to Settings > Connections. |
+| 422         | `PLATFORM_NOT_CONNECTED` | The target platform is not connected. Direct user to https://powerpost.ai/settings/connections |
 | 429         | `RATE_LIMIT_EXCEEDED`    | Too many requests. Wait the duration in `retryAfter` seconds and retry. |
 | 500         | `INTERNAL_ERROR`         | Server error. Wait a moment and try again.                             |
 
@@ -640,42 +664,36 @@ Every response includes an `X-Request-Id` header. If the user needs support, giv
 
 ---
 
-## Important Notes
+## Things to know
 
-- **Always confirm before publishing.** Publishing sends content to real social platforms. Show the user what will be posted and to which platforms, and wait for explicit confirmation.
-- **YouTube requires a title.** When creating a post with `youtube-video` or `youtube-short`, include a `title` field in the post item.
-- **Multiple post types, one caption per platform.** If the user wants `instagram-reel` and `instagram-feed`, those share one Instagram caption. The post type is about publishing format, not caption variation.
-- **Generated image URLs expire after 7 days.** Always use `media_id` to reference images in posts, not the URL.
-- **Credits are account-wide.** They are shared across all workspaces.
-- **Workspaces are isolated.** Each workspace has its own generations, posts, media, and connections. Content in one workspace is never visible to another.
-- **Webhooks exist but are dashboard-configured.** Users can set up webhooks in Settings > API to receive real-time notifications instead of polling. This is useful for production integrations but not needed for agent usage.
+- Always show the user what will be posted and where, and get explicit confirmation before publishing. This goes to real social accounts.
+- YouTube posts need a `title` field in addition to the caption.
+- If the user picks both `instagram-reel` and `instagram-feed`, they share one Instagram caption. The post type controls the publishing format, not the caption.
+- Image URLs from generation expire after 7 days. Always use `media_id` when creating posts, not the URL.
+- Credits are shared across all workspaces on an account.
+- Workspaces are isolated from each other. Generations, posts, media, and connections in one workspace aren't visible in another.
+- Users can set up webhooks at https://powerpost.ai/settings/api for real-time notifications instead of polling. Not needed for agent usage, but useful for production integrations.
 
-## External Endpoints
+## External endpoints
 
-This skill makes HTTPS requests to a single domain:
+All requests go to one domain: `https://powerpost.ai/api/v1/*`. Nothing is sent anywhere else.
 
-- `https://powerpost.ai/api/v1/*` — All API calls (content generation, image generation, media upload, post creation, publishing, credit checks).
+## Security and privacy
 
-No other domains are contacted. No data is sent anywhere else.
+- Your API key and workspace ID are sent to `powerpost.ai` as HTTP headers with every request. They're not logged, displayed, or sent anywhere else.
+- Prompts, uploaded media, and generated content are stored on PowerPost's servers, scoped to your workspace.
+- This skill only uses `curl` over HTTPS. It doesn't write files, run scripts, or touch your system.
 
-## Security and Privacy
+## Trust
 
-- Your `POWERPOST_API_KEY` and `POWERPOST_WORKSPACE_ID` are sent to `powerpost.ai` as HTTP headers with every request. They are never logged, displayed, or sent elsewhere.
-- Prompts, uploaded media, and generated content are sent to and stored on PowerPost's servers, scoped to your workspace.
-- The skill only uses `curl` to make HTTPS requests. It does not write files, execute scripts, or modify your system.
-
-## Trust Statement
-
-When you use this skill, your prompts, images, videos, and API credentials are transmitted to `powerpost.ai` over HTTPS. PowerPost processes your content using third-party AI models on the server side. Review PowerPost's privacy policy at https://powerpost.ai/terms for details on data handling and retention.
+When you use this skill, your prompts, images, videos, and credentials go to `powerpost.ai` over HTTPS. PowerPost uses third-party AI models on their servers to process your content. Their privacy policy is at https://powerpost.ai/terms and support is at https://powerpost.ai/contact
 
 ## Tips
 
-- Before any generation, check the balance so the user is not surprised by an insufficient credits error.
-- **Use deep research for important posts.** It costs a bit more but produces higher-quality, research-backed content.
-- Default to `regular` research mode unless the user explicitly asks for deep research or says the post is important.
-- **Default to `square` for image size** if the user does not specify. It works across most platforms.
-- Default to `flux2-flex` for image model unless the user has a preference. It supports all sizes and handles multi-reference well.
-- In testing or automation environments, `read_draft` keys prevent accidental publishing.
-- **If generation fails, credits are refunded.** Reassure the user and suggest trying again.
-- When the user says "all platforms," include one post type per supported platform: `instagram-feed`, `tiktok-video`, `youtube-short`, `x-post`, `facebook-post`, `linkedin-post`. This list may grow as new platforms are added.
-- Setting `enhance_prompt: true` on image generation lets the AI rewrite the prompt for better results. Suggest it when the user's description is short or vague.
+- Always check the credit balance before starting a generation. Better to warn the user upfront than hit an insufficient credits error mid-flow.
+- Default to `regular` research mode. Only use `deep` when the user asks for it or says the post matters.
+- Default to `square` for image size if the user doesn't say. It works on most platforms.
+- Default to `flux2-flex` for the image model. It supports all sizes and handles reference images well.
+- If a generation fails, credits are refunded. Let the user know and suggest trying again.
+- When the user says "all platforms," use one post type per platform: `instagram-feed`, `tiktok-video`, `youtube-short`, `x-post`, `facebook-post`, `linkedin-post`.
+- If the user's image description is short or vague, suggest setting `enhance_prompt: true` to let the AI fill in the details.

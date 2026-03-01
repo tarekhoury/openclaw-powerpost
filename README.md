@@ -1,119 +1,111 @@
 # PowerPost Skill for OpenClaw
 
-Generate social media content and publish it from your OpenClaw agent.
+Tell your agent what to post. It writes the captions, makes the images, and publishes them for you.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/tarekhoury/openclaw-powerpost)
+[![Version](https://img.shields.io/badge/version-0.1.1-blue)](https://github.com/tarekhoury/openclaw-powerpost)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
 
-## What It Does
+## What it does
 
-PowerPost combines **content generation** with **direct publishing**. One command can research a topic, write captions tailored to each platform, generate images, and post to your connected accounts.
+You say "post about our product launch on Instagram and TikTok" and the agent takes it from there. It researches the topic, writes captions that fit each platform, generates images if you want them, and publishes to your connected accounts. You review everything before it goes live.
 
-**Platforms supported:** Instagram, TikTok, X (Twitter), YouTube, Facebook, LinkedIn, and more as they're added.
+Platforms: Instagram, TikTok, X (Twitter), YouTube, Facebook, LinkedIn, and more as they're added.
 
-**Key features:**
-
-| Feature | Description |
-|---|---|
-| AI captions | Content tailored to each platform |
-| Image generation | AI-generated visuals for your posts |
-| Deep research mode | Extended research for higher-quality content |
-| Custom writing styles | Match content to your brand voice |
-| Draft review workflow | Review and approve before publishing |
+The agent can also run in draft-only mode if you'd rather review and publish manually.
 
 ---
 
-## Prerequisites
+## What you need
 
-- A PowerPost account with credits — [powerpost.ai](https://powerpost.ai)
-- An API key — **Settings → API**
-- Your Workspace ID — **Settings → Workspaces**
-- Connected social accounts for publishing — **Settings → Connections**
+- A PowerPost account ([sign up here](https://powerpost.ai))
+- An API key ([create one here](https://powerpost.ai/settings/api))
+- Your workspace ID ([find it here](https://powerpost.ai/settings/workspaces))
+- At least one connected social account ([connect here](https://powerpost.ai/settings/connections))
+
+New accounts get 50 free credits to start.
 
 ---
 
-## Installation
+## Install
 
 ```bash
-# Install from ClawHub
+# From ClawHub
 openclaw skill install powerpost
 
-# Or install manually
+# Or clone it
 git clone https://github.com/tarekhoury/openclaw-powerpost.git ~/.openclaw/skills/powerpost
 ```
 
 ---
 
-## Configuration
+## Configure
+
+You need to set two credentials. The API key can go in the Skills UI or via config. The workspace ID has to be set via config (the UI only has one field per skill).
 
 ```bash
-# Set your credentials
-openclaw config set skills.powerpost.apiKey "pp_live_sk_YOUR_KEY"
-openclaw config set skills.powerpost.workspaceId "YOUR_WORKSPACE_ID"
+# API key (or paste it into the "API key" field in the OpenClaw Skills UI)
+openclaw config set skills.entries.powerpost.apiKey "pp_live_sk_YOUR_KEY"
 
-# Or use environment variables
+# Workspace ID
+openclaw config set skills.entries.powerpost.env.POWERPOST_WORKSPACE_ID "YOUR_WORKSPACE_ID"
+```
+
+If you prefer environment variables:
+
+```bash
 export POWERPOST_API_KEY="pp_live_sk_YOUR_KEY"
 export POWERPOST_WORKSPACE_ID="YOUR_WORKSPACE_ID"
 ```
 
 ---
 
-## Usage Examples
+## Try it
 
-Say these (or similar) to your OpenClaw agent:
+Just talk to your agent:
 
 ```
 "Post about our new product launch on Instagram and TikTok"
-
 "Write captions about AI trends for all platforms"
-
 "Generate an image for my last post"
-
-"Create a deep research post about sustainable fashion"
-
 "Check my PowerPost credits"
-
 "Upload this image and write captions about it"
-
-"Create a draft post about our company update but don't publish yet"
+"Create a draft about our company update but don't publish yet"
 ```
 
 ---
 
-## API Key Types
+## API key types
 
-| Key Type | Permissions | When to Use |
+| Type | What it can do | Good for |
 |---|---|---|
-| `read_write` | Generate, publish, manage posts | Production agents that publish content |
-| `read_draft` | Generate and save drafts only, read data | Agents that need human approval before publishing |
-
-Use `read_draft` keys when you want a human-in-the-loop review step. Use `read_write` keys for fully automated workflows.
+| `read_write` | Everything, including publishing | Agents that post on your behalf |
+| `read_draft` | Generate and draft, but can't publish | When you want a human to approve before posting |
 
 ---
 
-## Supported Platforms and Post Types
+## Supported platforms
 
-| Platform | Post Types |
+| Platform | Post types |
 |---|---|
-| Instagram | Feed post, Reel, Story |
+| Instagram | Feed, Reel, Story |
 | TikTok | Video, Photos |
-| X (Twitter) | Post (tweet) |
+| X (Twitter) | Post |
 | YouTube | Video, Short |
 | Facebook | Post, Reel, Story |
-| LinkedIn | Post (personal profile) |
+| LinkedIn | Post |
 
 ---
 
-## Credit Costs
+## Credits
 
-Content generation, image generation, and deep research each consume credits. Credit costs vary by operation and model used. See the [full pricing page](https://powerpost.ai/docs) for details.
+Every generation and publish uses credits. Costs vary by what you're doing and which image model you pick. See [pricing](https://powerpost.ai/pricing) for the full breakdown.
 
 ---
 
 ## Links
 
-- [API Documentation](https://powerpost.ai/docs)
+- [API docs](https://powerpost.ai/docs)
 - [Dashboard](https://powerpost.ai)
-- [Support](https://powerpost.ai/support)
+- [Support](https://powerpost.ai/contact)
