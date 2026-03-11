@@ -2,14 +2,14 @@
 
 Tell your agent what to post. It writes the captions, makes the images, and publishes them for you.
 
-[![Version](https://img.shields.io/badge/version-0.1.1-blue)](https://github.com/tarekhoury/openclaw-powerpost)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/tarekhoury/openclaw-powerpost)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
 
 ## What it does
 
-You say "post about our product launch on Instagram and TikTok" and the agent takes it from there. It researches the topic, writes captions that fit each platform, generates images if you want them, and publishes to your connected accounts. You review everything before it goes live.
+You say "post about our product launch on Instagram and TikTok" and the agent takes it from there. It researches the topic, writes captions that fit each platform, generates images or videos if you want them, and publishes to your connected accounts. You can also pass in URLs as research sources so the captions reference specific pages. You review everything before it goes live.
 
 Platforms: Instagram, TikTok, X (Twitter), YouTube, Facebook, LinkedIn, and more as they're added.
 
@@ -69,9 +69,11 @@ Just talk to your agent:
 "Post about our new product launch on Instagram and TikTok"
 "Write captions about AI trends for all platforms"
 "Generate an image for my last post"
+"Generate a 5-second video of a sunset over the ocean"
 "Check my PowerPost credits"
 "Upload this image and write captions about it"
 "Create a draft about our company update but don't publish yet"
+"Post about this page: https://example.com/launch"
 ```
 
 ---
@@ -100,7 +102,7 @@ Just talk to your agent:
 
 ## Credits
 
-Every generation and publish uses credits. Costs vary by what you're doing and which image model you pick. See [pricing](https://powerpost.ai/pricing) for the full breakdown.
+Every generation and publish uses credits. Costs vary by what you're doing — caption generation, image model, video model and duration, publishing platform. The exact cost shows up in every API response.
 
 ---
 
