@@ -1,7 +1,7 @@
 ---
 name: powerpost
 description: Generate social media content and publish to all major platforms from one command.
-version: 0.1.1
+version: 0.2.0
 metadata:
   openclaw:
     requires:
@@ -17,7 +17,7 @@ metadata:
 
 # PowerPost Skill
 
-PowerPost writes social media captions, generates images, and publishes to Instagram, TikTok, X/Twitter, YouTube, Facebook, and LinkedIn through a single API.
+PowerPost writes social media captions, generates images and videos, and publishes to Instagram, TikTok, X/Twitter, YouTube, Facebook, and LinkedIn through a single API.
 
 ## Setup
 
@@ -80,7 +80,7 @@ The standard PowerPost flow is:
 1. **Check credits** to make sure the user has enough balance.
 2. **Generate content** from text, images, or video (async — returns a generation ID).
 3. **Poll for results** every 2-3 seconds until status is `completed` or `failed`.
-4. **Optionally generate images** from the captions or a text prompt (also async — poll for results).
+4. **Optionally generate images or videos** from the captions or a text prompt (also async — poll for results).
 5. **Create a post** combining the generated captions and images into a draft.
 6. **Show the draft** to the user for review before publishing.
 7. **Publish** the post to connected social platforms.
@@ -114,18 +114,15 @@ Tell the user their current balance. If balance is low, warn them before they st
 
 ### Credit Costs
 
-**Caption generation:**
-- Regular research: 6 base credits + 1 per image + 6 per minute of video
-- Deep research: 8 base credits + 1 per image + 6 per minute of video
+Credit costs vary by action:
+- **Caption generation:** depends on research mode, input type, number of source URLs, and video length.
+- **Image generation:** depends on model and quantity.
+- **Video generation:** depends on model, duration, and whether audio is enabled.
+- **Publishing:** depends on platform. Premium platforms like X cost more.
 
-Example: text input, regular research = 6 credits.
-Example: 2-min video, deep research = 8 + 12 = 20 credits.
+The exact cost is returned in every API response via `credits_used` and `remaining_credits`. Always check credits before starting a generation so the user knows the cost upfront.
 
-**Image generation (per image):** `flux2-flex` = 5 credits, `ideogram-3` = 6 credits, `nano-banana-2` = 6 credits, `gpt-image-1.5` = 14 credits. Multiply by quantity.
-
-**Publishing:** Flat 1-credit base fee + 3-credit surcharge for X. Credits only charged for successfully published items.
-
-Credits are refunded for failed generations and failed publish attempts.
+Credits are only charged for successful operations. Failed generations, failed publish attempts, and failed URL scrapes are refunded.
 
 ---
 
@@ -168,10 +165,10 @@ Tell the user the upload was successful and show the file name and size.
 
 ### 3. Generate Content
 
-Use this when the user wants to create social media captions. This is the primary endpoint.
+Use this when the user wants to create social media captions.
 
 There are three input modes, determined by which fields you provide:
-- **Text only:** Send `prompt` (required, 3-500 chars).
+- **Text only:** Send `prompt` (required, 3-2000 chars).
 - **Image input:** Send `media_ids` with image IDs (+ optional `prompt` for context).
 - **Video input:** Send `media_ids` with a video ID (+ optional `prompt` for context).
 
@@ -196,6 +193,7 @@ curl -X POST https://powerpost.ai/api/v1/content/generate \
 **Optional fields:**
 - `writing_style_id` (string) — A custom writing style ID created in the dashboard.
 - `cta_text` (string, max 100 chars) — A custom call-to-action.
+- `source_urls` (string array, max 10) — URLs to scrape for research context. Must be HTTPS. Private/internal URLs are filtered out for security. Each URL adds to the generation cost.
 
 **Post types:**
 
@@ -423,7 +421,106 @@ Show the user the image URLs so they can preview. Save the `media_id` values for
 
 ---
 
-### 8. Create Post
+### 8. Generate Videos
+
+Use this when the user wants to create AI-generated videos. There are two input modes:
+
+**Text-to-video:** Describe the video in `prompt`.
+**Image-to-video:** Provide `prompt` + `source_image` (media ID of an uploaded image).
+
+```bash
+curl -X POST https://powerpost.ai/api/v1/videos/generate \
+  -H "x-api-key: $POWERPOST_API_KEY" \
+  -H "X-Workspace-Id: $POWERPOST_WORKSPACE_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "A golden retriever running through a field of wildflowers at sunset",
+    "size": "landscape",
+    "duration": 5,
+    "model": "kling-3.0-pro",
+    "has_audio": false
+  }'
+```
+
+**Fields:**
+- `prompt` (string, required) — Text description of the video.
+- `size` (string) — `landscape` (16:9) or `portrait` (9:16). Default: `landscape`.
+- `duration` (integer, required) — Duration in seconds. Must match one of the model's supported values (see table).
+- `model` (string) — `kling-3.0-pro` (default), `veo-3.1`, or `runway-gen-4.5`.
+- `has_audio` (boolean) — Generate with audio. Default: false. Only supported by some models.
+- `enhance_prompt` (boolean) — Let AI optimize the prompt. Default: false.
+- `source_image` (media ID, UUID) — Media ID of an uploaded image for image-to-video mode.
+
+**Model details:**
+
+| Model ID         | Name           | Sizes               | Audio | Durations |
+|------------------|----------------|----------------------|-------|-----------|
+| `kling-3.0-pro`  | Kling 3.0 Pro  | landscape, portrait | Yes   | 5s, 10s   |
+| `veo-3.1`        | Google Veo 3.1 | landscape, portrait | Yes   | 4s, 8s    |
+| `runway-gen-4.5` | Runway Gen-4.5 | landscape, portrait | No    | 5s, 10s   |
+
+**Prompt limits by model:** Veo 3.1 = 3000 chars, Kling 3.0 Pro = 2500 chars, Runway Gen-4.5 = 1000 chars.
+
+Credit costs depend on the model, duration, and audio. The exact cost is returned in the response.
+
+Response:
+
+```json
+{
+  "video_generation_id": "7a8b9c0d-e1f2-3456-abcd-ef7890123456",
+  "status": "processing",
+  "credits_used": 15,
+  "remaining_credits": 85,
+  "status_url": "/api/v1/videos/generations/7a8b9c0d-e1f2-3456-abcd-ef7890123456"
+}
+```
+
+Tell the user that video generation has started and begin polling.
+
+---
+
+### 9. Get Video Generation Status (Polling)
+
+Poll this endpoint every 10 seconds until status is `completed` or `failed`. Video generation takes longer than images — do not poll more than 120 times.
+
+```bash
+curl https://powerpost.ai/api/v1/videos/generations/VIDEO_GENERATION_ID \
+  -H "x-api-key: $POWERPOST_API_KEY" \
+  -H "X-Workspace-Id: $POWERPOST_WORKSPACE_ID"
+```
+
+**When completed:**
+
+```json
+{
+  "video_generation_id": "7a8b9c0d-...",
+  "status": "completed",
+  "prompt": "A golden retriever running...",
+  "size": "landscape",
+  "duration": 5,
+  "has_audio": false,
+  "model": "kling-3.0-pro",
+  "created_at": "2026-03-11T10:00:00Z",
+  "video": {
+    "media_id": "vid-001-abcd",
+    "url": "https://powerpost.ai/storage/videos/vid-001-abcd.mp4",
+    "thumbnail_url": "https://powerpost.ai/storage/thumbs/vid-001-abcd.jpg",
+    "width": 1920,
+    "height": 1080,
+    "duration": 5
+  }
+}
+```
+
+The video has a `media_id` which you use to attach it to a post. The `url` is a preview link valid for 7 days. Always use the `media_id`, not the URL, when creating posts.
+
+Show the user the video URL so they can preview. Save the `media_id` for creating posts.
+
+**When failed:** The response includes an `error` object with `code` (`VIDEO_GENERATION_FAILED`) and `message`. Credits are refunded on failure.
+
+---
+
+### 10. Create Post
 
 Use this to assemble captions and media into a draft post ready for review and publishing.
 
@@ -502,7 +599,7 @@ After creating a post, show the user a summary of every item (platform, content 
 
 ---
 
-### 9. Get Post
+### 11. Get Post
 
 Use this to check the status of a post, especially after publishing.
 
@@ -519,7 +616,7 @@ Item statuses: `draft`, `posting`, `posted`, `failed`.
 
 ---
 
-### 10. Publish Post
+### 12. Publish Post
 
 Use this to publish a draft post to connected social platforms. Always confirm with the user before calling this endpoint.
 
@@ -548,7 +645,7 @@ Response:
 
 Publishing is asynchronous. After receiving the response, poll the Get Post endpoint every 3 seconds to check when each item has finished publishing.
 
-Publishing costs: 1-credit base fee + 3-credit surcharge for X.
+Publishing costs vary by platform. The exact cost is returned in the response via `credits_used`.
 
 Tell the user how many credits were used and that publishing is in progress. When all items show `posted` or `failed`, summarize the results.
 
@@ -561,7 +658,7 @@ Tell the user how many credits were used and that publishing is in progress. Whe
 Full flow:
 1. Check credits.
 2. Ask which platforms if not specified. Default to all if the user says "everywhere" or "all platforms".
-3. Generate content with the user's topic as the prompt. Use `regular` research mode unless they ask for deep.
+3. Generate content with the user's topic as the prompt. Use `regular` research mode unless they ask for deep. If the user provides URLs as references, include them in `source_urls`.
 4. Poll until complete.
 5. Show the generated captions.
 6. Ask if they want to generate images too.
@@ -585,6 +682,16 @@ Partial flow (no publishing):
 4. Generate the image.
 5. Poll until complete.
 6. Show the image URLs to the user.
+
+### "Create a video" / "Generate a video of X"
+
+1. Check credits.
+2. If the user has an image they want to animate, use image-to-video mode (upload first, then pass `source_image`). Otherwise use text-to-video mode.
+3. Ask about duration if not specified. Default to 5 seconds.
+4. Ask about size if not specified (landscape is a safe default for video).
+5. Generate the video.
+6. Poll until complete (video takes longer than images — up to a few minutes).
+7. Show the video URL to the user.
 
 ### "Check my credits" / "How many credits do I have?"
 
@@ -613,14 +720,14 @@ Partial flow (no publishing):
 
 ## Polling Strategy
 
-Both content generation and image generation are asynchronous. After starting either one:
+Content generation, image generation, and video generation are all asynchronous. After starting any of them:
 
 1. Wait 2 seconds.
 2. Call the status endpoint.
 3. If status is `processing` or `pending`, wait 3 seconds and poll again.
 4. If status is `completed`, show the results.
 5. If status is `failed`, show the error and tell the user credits were refunded.
-6. Do not poll more than 60 times. If it times out, tell the user to try again later.
+6. Do not poll more than 60 times for content/images, or 120 times for video (it takes longer). If it times out, tell the user to try again later.
 
 Publishing is also asynchronous. After calling publish:
 1. Wait 3 seconds.
@@ -669,7 +776,7 @@ Every response includes an `X-Request-Id` header. If the user needs support, giv
 - Always show the user what will be posted and where, and get explicit confirmation before publishing. This goes to real social accounts.
 - YouTube posts need a `title` field in addition to the caption.
 - If the user picks both `instagram-reel` and `instagram-feed`, they share one Instagram caption. The post type controls the publishing format, not the caption.
-- Image URLs from generation expire after 7 days. Always use `media_id` when creating posts, not the URL.
+- Image and video URLs from generation expire after 7 days. Always use `media_id` when creating posts, not the URL.
 - Credits are shared across all workspaces on an account.
 - Workspaces are isolated from each other. Generations, posts, media, and connections in one workspace aren't visible in another.
 - Users can set up webhooks at https://powerpost.ai/settings/api for real-time notifications instead of polling. Not needed for agent usage, but useful for production integrations.
@@ -697,3 +804,7 @@ When you use this skill, your prompts, images, videos, and credentials go to `po
 - If a generation fails, credits are refunded. Let the user know and suggest trying again.
 - When the user says "all platforms," use one post type per platform: `instagram-feed`, `tiktok-video`, `youtube-short`, `x-post`, `facebook-post`, `linkedin-post`.
 - If the user's image description is short or vague, suggest setting `enhance_prompt: true` to let the AI fill in the details.
+- Default to `kling-3.0-pro` for video generation. It handles both sizes and supports audio.
+- Default to `landscape` and 5 seconds for video unless the user says otherwise.
+- Video generation is slower than images. Tell the user it may take a couple minutes.
+- If the user provides URLs as references for a post, pass them as `source_urls` in the content generation request. Each URL adds to the cost.
