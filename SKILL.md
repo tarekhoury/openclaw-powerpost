@@ -1,7 +1,7 @@
 ---
 name: powerpost
 description: Generate social media content and publish to all major platforms from one command.
-version: 0.2.0
+version: 0.3.0
 metadata:
   openclaw:
     requires:
@@ -17,7 +17,7 @@ metadata:
 
 # PowerPost Skill
 
-PowerPost writes social media captions, generates images and videos, and publishes to Instagram, TikTok, X/Twitter, YouTube, Facebook, and LinkedIn through a single API.
+PowerPost writes social media captions, generates images and videos, manages your content calendar, and publishes to Instagram, TikTok, X/Twitter, YouTube, Facebook, and LinkedIn through a single API.
 
 ## Setup
 
@@ -768,6 +768,155 @@ Handle these errors:
 For rate limit errors (429), the response includes a `retryAfter` field in seconds. Wait that long before retrying.
 
 Every response includes an `X-Request-Id` header. If the user needs support, give them this ID.
+
+---
+
+### 13. List Calendar Entries
+
+Use this to pull up what's on the user's content calendar.
+
+```bash
+curl "https://powerpost.ai/api/v1/calendar/entries?start_date=2026-03-01&end_date=2026-03-31" \
+  -H "x-api-key: $POWERPOST_API_KEY" \
+  -H "X-Workspace-Id: $POWERPOST_WORKSPACE_ID"
+```
+
+**Query parameters (both required):**
+- `start_date` (string) — Start of range, `YYYY-MM-DD`.
+- `end_date` (string) — End of range, `YYYY-MM-DD`.
+
+The date range can't exceed 366 days.
+
+Response:
+
+```json
+{
+  "entries": [
+    {
+      "entry_id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Product launch announcement",
+      "description": "Share the new feature across all channels",
+      "scheduled_date": "2026-03-25",
+      "scheduled_time": "14:00",
+      "platforms": ["instagram", "tiktok", "x"],
+      "status": "planned",
+      "created_at": "2026-03-19T10:00:00Z",
+      "updated_at": "2026-03-19T10:00:00Z"
+    }
+  ]
+}
+```
+
+Show the entries grouped by date with their title and platforms.
+
+---
+
+### 14. Create Calendar Entry
+
+Use this to plan a future post on the calendar.
+
+```bash
+curl -X POST https://powerpost.ai/api/v1/calendar/entries \
+  -H "x-api-key: $POWERPOST_API_KEY" \
+  -H "X-Workspace-Id: $POWERPOST_WORKSPACE_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Product launch announcement",
+    "description": "Share the new feature across all channels",
+    "scheduled_date": "2026-03-25",
+    "scheduled_time": "14:00",
+    "platforms": ["instagram", "tiktok", "x"]
+  }'
+```
+
+**Fields:**
+- `title` (string, required) — What the post is about (max 500 chars).
+- `description` (string, optional) — Extra notes or details (max 5000 chars).
+- `scheduled_date` (string, required) — Target date, `YYYY-MM-DD`.
+- `scheduled_time` (string, optional) — Target time, `HH:MM` (24-hour).
+- `platforms` (string array, optional) — Target platforms: `instagram`, `tiktok`, `youtube`, `x`, `facebook`, `linkedin`.
+
+Response:
+
+```json
+{
+  "entry_id": "550e8400-e29b-41d4-a716-446655440000",
+  "title": "Product launch announcement",
+  "description": "Share the new feature across all channels",
+  "scheduled_date": "2026-03-25",
+  "scheduled_time": "14:00",
+  "platforms": ["instagram", "tiktok", "x"],
+  "status": "planned",
+  "created_at": "2026-03-19T10:00:00Z",
+  "updated_at": "2026-03-19T10:00:00Z"
+}
+```
+
+Confirm the entry was created and show the date, title, and platforms.
+
+---
+
+### 15. Get Calendar Entry
+
+Use this to fetch a specific calendar entry by ID.
+
+```bash
+curl https://powerpost.ai/api/v1/calendar/entries/ENTRY_ID \
+  -H "x-api-key: $POWERPOST_API_KEY" \
+  -H "X-Workspace-Id: $POWERPOST_WORKSPACE_ID"
+```
+
+Response is the same shape as the create response. Returns 404 if the entry doesn't exist.
+
+---
+
+### 16. Update Calendar Entry
+
+Use this to change details on an existing calendar entry. Only include the fields you want to update.
+
+```bash
+curl -X PATCH https://powerpost.ai/api/v1/calendar/entries/ENTRY_ID \
+  -H "x-api-key: $POWERPOST_API_KEY" \
+  -H "X-Workspace-Id: $POWERPOST_WORKSPACE_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Updated launch announcement",
+    "scheduled_date": "2026-03-28"
+  }'
+```
+
+**Fields (all optional):**
+- `title` (string) — Max 500 chars.
+- `description` (string, nullable) — Max 5000 chars. Pass `null` to clear.
+- `scheduled_date` (string) — `YYYY-MM-DD`.
+- `scheduled_time` (string, nullable) — `HH:MM`. Pass `null` to clear.
+- `platforms` (string array) — Replaces the full list.
+
+At least one field must be provided.
+
+Response returns the full updated entry.
+
+---
+
+### 17. Delete Calendar Entry
+
+Use this to remove a calendar entry.
+
+```bash
+curl -X DELETE https://powerpost.ai/api/v1/calendar/entries/ENTRY_ID \
+  -H "x-api-key: $POWERPOST_API_KEY" \
+  -H "X-Workspace-Id: $POWERPOST_WORKSPACE_ID"
+```
+
+Response:
+
+```json
+{
+  "success": true
+}
+```
+
+Returns 404 if the entry doesn't exist.
 
 ---
 

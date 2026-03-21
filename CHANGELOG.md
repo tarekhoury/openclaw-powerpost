@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+**Content calendar.** Five new endpoints for calendar entries (list, create, get, update, delete). You can plan posts with a date, time, target platforms, and notes.
+
 ## 0.2.0
 
 **Video generation.** Two new endpoints for creating AI videos from text or images. Three models to pick from (Kling 3.0 Pro, Veo 3.1, Runway Gen-4.5) with configurable duration, size, and audio. Polls every 10 seconds since video takes longer than images.

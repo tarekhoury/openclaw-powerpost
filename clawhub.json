@@ -1,7 +1,7 @@
 {
   "name": "powerpost",
   "tagline": "Tell your agent what to post. It writes, designs, and publishes for you.",
-  "description": "Nobody wants to rewrite the same post for every platform and paste it into each app separately. PowerPost lets your OpenClaw agent handle the whole thing.\n\nTell it what to post. It researches the topic, writes captions that actually fit each platform, generates images and videos if you want them, and publishes to every account you've connected. Works with Instagram, TikTok, X, YouTube, Facebook, LinkedIn, and more as they're added.\n\nYou can feed it text, images, video, or URLs as research sources. There's a deep research mode for when the post actually matters, custom writing styles so it sounds like you, and a draft-first workflow so nothing goes live without your approval. If you'd rather keep a human in the loop, read-only API keys let the agent generate content but can't publish.",
+  "description": "Nobody wants to rewrite the same post for every platform and paste it into each app separately. PowerPost lets your OpenClaw agent handle the whole thing.\n\nTell it what to post. It researches the topic, writes captions that actually fit each platform, generates images and videos if you want them, and publishes to every account you've connected. There's also a content calendar so you can plan what's going out and when. Works with Instagram, TikTok, X, YouTube, Facebook, LinkedIn, and more as they're added.\n\nYou can feed it text, images, video, or URLs as research sources. There's a deep research mode for when the post actually matters, custom writing styles so it sounds like you, and a draft-first workflow so nothing goes live without your approval. If you'd rather keep a human in the loop, read-only API keys let the agent generate content but can't publish.",
   "category": "social-media",
   "tags": [
     "social-media",
@@ -16,9 +16,10 @@
     "linkedin",
     "facebook",
     "x",
+    "content-calendar",
     "multi-platform"
   ],
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "author": {
     "name": "PowerPost",

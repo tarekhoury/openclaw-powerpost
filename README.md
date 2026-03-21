@@ -2,7 +2,7 @@
 
 Tell your agent what to post. It writes the captions, makes the images, and publishes them for you.
 
-[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/tarekhoury/openclaw-powerpost)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/tarekhoury/openclaw-powerpost)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ---
@@ -74,6 +74,10 @@ Just talk to your agent:
 "Upload this image and write captions about it"
 "Create a draft about our company update but don't publish yet"
 "Post about this page: https://example.com/launch"
+"What's on my calendar for next week?"
+"Plan a post about our product launch for March 25th on Instagram and TikTok"
+"Move that calendar entry to Friday"
+"Delete that calendar entry"
 ```
 
 ---
